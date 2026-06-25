@@ -1,13 +1,11 @@
 """
-Supabase DB Client
-Handles all persistent storage for bookings and expenses via PostgreSQL (Supabase).
+Supabase Database Client + Repository Functions
 """
 import os
 import logging
 from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
-
 _client: Client | None = None
 
 
@@ -17,48 +15,51 @@ def get_supabase() -> Client:
         url = os.environ.get("SUPABASE_URL")
         key = os.environ.get("SUPABASE_SERVICE_KEY")
         if not url or not key:
-            raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment")
+            raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set.")
         _client = create_client(url, key)
+        logger.info("Supabase client initialised.")
     return _client
 
 
-# ─── Bookings ────────────────────────────────────────────────────────────────
+# ── Booking functions ─────────────────────────────────────────
 
 async def insert_booking(booking: dict) -> dict:
-    sb = get_supabase()
-    result = sb.table("bookings").insert(booking).execute()
-    logger.info("booking_inserted", extra={"booking_id": booking.get("booking_id")})
-    return result.data[0] if result.data else booking
+    db = get_supabase()
+    result = db.table("bookings").insert(booking).execute()
+    if result.data:
+        return result.data[0]
+    raise RuntimeError("Failed to insert booking")
 
 
-async def get_all_bookings() -> list:
-    sb = get_supabase()
-    result = sb.table("bookings").select("*").order("booked_at", desc=True).execute()
+async def get_all_bookings(user_id: str = "default") -> list:
+    db = get_supabase()
+    result = db.table("bookings").select("*").order("created_at", desc=True).execute()
     return result.data or []
 
 
 async def delete_booking(booking_id: str) -> bool:
-    sb = get_supabase()
-    result = sb.table("bookings").delete().eq("booking_id", booking_id).execute()
-    return len(result.data) > 0
+    db = get_supabase()
+    result = db.table("bookings").delete().eq("booking_id", booking_id).execute()
+    return bool(result.data)
 
 
-# ─── Expenses ────────────────────────────────────────────────────────────────
+# ── Expense functions ─────────────────────────────────────────
 
 async def insert_expense(expense: dict) -> dict:
-    sb = get_supabase()
-    result = sb.table("expenses").insert(expense).execute()
-    logger.info("expense_inserted", extra={"expense_id": expense.get("id")})
-    return result.data[0] if result.data else expense
+    db = get_supabase()
+    result = db.table("expenses").insert(expense).execute()
+    if result.data:
+        return result.data[0]
+    raise RuntimeError("Failed to insert expense")
 
 
-async def get_all_expenses() -> list:
-    sb = get_supabase()
-    result = sb.table("expenses").select("*").order("logged_at", desc=True).execute()
+async def get_all_expenses(user_id: str = "default") -> list:
+    db = get_supabase()
+    result = db.table("expenses").select("*").order("created_at", desc=True).execute()
     return result.data or []
 
 
 async def delete_expense(expense_id: str) -> bool:
-    sb = get_supabase()
-    result = sb.table("expenses").delete().eq("id", expense_id).execute()
-    return len(result.data) > 0
+    db = get_supabase()
+    result = db.table("expenses").delete().eq("expense_id", expense_id).execute()
+    return bool(result.data)
