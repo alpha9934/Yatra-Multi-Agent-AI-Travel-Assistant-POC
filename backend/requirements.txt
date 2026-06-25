@@ -8,16 +8,13 @@ python-dotenv==1.0.1
 # OpenAI
 openai==1.82.0
 
-# HTTP client — pinned to satisfy both openai and supabase
+# HTTP client
 httpx==0.27.2
 
-# Supabase (PostgreSQL persistence)
+# Supabase
 supabase==2.10.0
-postgrest==0.17.0
-storage3==0.7.7
-supafunc==0.5.3
 
-# Pinecone (vector DB for RAG)
+# Pinecone
 pinecone==5.4.2
 
 # Resilience
